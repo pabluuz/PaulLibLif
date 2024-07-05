@@ -1,0 +1,17 @@
+wh_industry:
+    ObjectTypeName: Warehouse
+    ItemToAdd: Honey
+    Amount: 5
+    MultiplyByQuality: true
+    Fuel: Fertilizer
+    FuelRequired: False
+    FuelBonusQuality: 20
+    FuelBonusQuantity: 5
+another_example:
+    ObjectTypeName: Lumber Mill
+    ItemToAdd: Wooden Plank
+    Amount: 5
+    MultiplyByQuality: true
+    Fuel: Log
+    FuelRequired: True
+    

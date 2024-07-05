@@ -1,0 +1,1 @@
+DatabaseUri: "mysql+pymysql://root:9303@localhost/lif_1"
