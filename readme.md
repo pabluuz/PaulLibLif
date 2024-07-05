@@ -9,20 +9,13 @@ This is very early testing, so expect a lot of bugs
 1. **Clone the repository**:
 
     ```bash
-    git clone https://github.com/yourusername/my_project.git
-    cd my_project
+    git clone git@github.com:pabluuz/paul-lib-lif.git
+    cd paul-lib-lif
     ```
 
 2. **Create and activate the virtual environment**:
 
     **Using `venv`**:
-
-    - On Windows:
-
-        ```bash
-        python -m venv venv
-        .\venv\Scripts\activate
-        ```
 
     - On macOS and Linux:
 
@@ -34,7 +27,7 @@ This is very early testing, so expect a lot of bugs
     - On Windows:
 
         ```batch
-        activate.bat
+        install.bat
         ```
 
 3. **Install dependencies**:
