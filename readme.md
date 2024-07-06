@@ -1,4 +1,5 @@
-# Paul Lib
+![Logo](readme_logo.png?raw=true)
+# PaulLibLif
 This library adds ORM to life is feudal database, and allows you to define some simple daily actions using YAML. See config/industries.yaml.example
 In this example every warehouse produces daily 5 pieces of honey (quality of warehouse = quality of honey)
 

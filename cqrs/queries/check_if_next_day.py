@@ -1,6 +1,6 @@
 import datetime
 from models.lib_data import PaulLibData
-from queries.base_query import BaseQuery
+from cqrs.queries.base_query import BaseQuery
 
 
 class CheckIfNextDayQuery(BaseQuery):

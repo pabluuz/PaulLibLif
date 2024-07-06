@@ -86,7 +86,7 @@ class Container(Base):
     feature_id = Column("FeatureID", Integer, ForeignKey("features.ID"), nullable=True)
 
     parent = relationship("Container", remote_side=[id], backref="children")
-    object_type = relationship("ObjectType")
+    object_type: Mapped["ObjectType"] = relationship("ObjectType")
     feature = relationship("Feature")
 
 
@@ -143,19 +143,6 @@ class Blueprint(Base):
     recipe = relationship("Recipe")
 
 
-class UnmovableObject(Base):
-    __tablename__ = "unmovable_objects"
-
-    id = Column("ID", Integer, primary_key=True, autoincrement=True)
-    object_type_id = Column("ObjectTypeID", Integer, ForeignKey("objects_types.ID"), nullable=False)
-    region_id = Column("RegionID", Integer, ForeignKey("regions.ID"), nullable=False)
-    durability = Column("Durability", Integer, nullable=False, default=100)
-    is_active = Column("IsActive", Boolean, nullable=False, default=True)
-
-    object_type = relationship("ObjectType")
-    region = relationship("Region")
-
-
 class Item(Base):
     __tablename__ = "items"
 
@@ -172,15 +159,77 @@ class Item(Base):
     container = relationship("Container")
 
 
+class UnmovableObject(Base):
+    __tablename__ = "unmovable_objects"
+
+    id = Column("ID", Integer, primary_key=True, autoincrement=True)
+    object_type_id = Column("ObjectTypeID", Integer, ForeignKey("objects_types.ID"), nullable=False)
+    root_container_id = Column(
+        "RootContainerID", Integer, ForeignKey("containers.ID"), nullable=True
+    )
+    durability = Column(
+        "Durability",
+        SmallInteger,
+        nullable=False,
+        default=0,
+        comment="2 digits after point Less then 10 = object is damaged",
+    )
+    created_durability = Column(
+        "CreatedDurability",
+        SmallInteger,
+        nullable=False,
+        default=0,
+        comment="2 digits after point, also acts as MaxDurability",
+    )
+    is_complete = Column("IsComplete", Boolean, nullable=False)
+    geo_data_id = Column("GeoDataID", Integer, nullable=False)
+    owner_id = Column("OwnerID", Integer, ForeignKey("character.ID"), nullable=True)
+    custom_name_id = Column("CustomNameID", Integer, ForeignKey("custom_texts.ID"), nullable=True)
+    dropped_time = Column("DroppedTime", TIMESTAMP, nullable=False, default="0000-00-00 00:00:00")
+    turn_angle = Column("TurnAngle", SmallInteger, nullable=False)
+
+    object_type = relationship("ObjectType")
+    root_container = relationship("Container", foreign_keys=[root_container_id])
+    owner = relationship("Character", foreign_keys=[owner_id])
+    custom_name = relationship("CustomText", foreign_keys=[custom_name_id])
+
+
 class MovableObject(Base):
     __tablename__ = "movable_objects"
 
     id = Column("ID", Integer, primary_key=True, autoincrement=True)
     object_type_id = Column("ObjectTypeID", Integer, ForeignKey("objects_types.ID"), nullable=False)
-    durability = Column("Durability", Integer, nullable=False, default=100)
-    is_active = Column("IsActive", Boolean, nullable=False, default=True)
+    root_container_id = Column(
+        "RootContainerID", Integer, ForeignKey("containers.ID"), nullable=True
+    )
+    durability = Column(
+        "Durability",
+        SmallInteger,
+        nullable=False,
+        default=100,
+        comment="Less then 10 - object is damaged",
+    )
+    created_durability = Column(
+        "CreatedDurability",
+        SmallInteger,
+        nullable=False,
+        default=0,
+        comment="2 digits after point, also acts as MaxDurability",
+    )
+    is_complete = Column("IsComplete", Boolean, nullable=False)
+    geo_data_id = Column("GeoDataID", Integer, nullable=False)
+    owner_id = Column("OwnerID", Integer, ForeignKey("character.ID"), nullable=True)
+    custom_name_id = Column("CustomNameID", Integer, ForeignKey("custom_texts.ID"), nullable=True)
+    dropped_time = Column("DroppedTime", TIMESTAMP, nullable=False, default="0000-00-00 00:00:00")
+    turn_angle = Column("TurnAngle", SmallInteger, nullable=False)
+    offset_mm_x = Column("OffsetMmX", SmallInteger, nullable=False, comment="ingame millimeters")
+    offset_mm_y = Column("OffsetMmY", SmallInteger, nullable=False, comment="ingame millimeters")
+    offset_mm_z = Column("OffsetMmZ", Integer, nullable=False, comment="ingame millimeters")
 
     object_type = relationship("ObjectType")
+    root_container = relationship("Container", foreign_keys=[root_container_id])
+    owner = relationship("Character", foreign_keys=[owner_id])
+    custom_name = relationship("CustomText", foreign_keys=[custom_name_id])
 
 
 class Character(Base):
