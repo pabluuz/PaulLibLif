@@ -86,7 +86,7 @@ class Container(Base):
     feature_id = Column("FeatureID", Integer, ForeignKey("features.ID"), nullable=True)
 
     parent = relationship("Container", remote_side=[id], backref="children")
-    object_type = relationship("ObjectType")
+    object_type: Mapped["ObjectType"] = relationship("ObjectType")
     feature = relationship("Feature")
 
 

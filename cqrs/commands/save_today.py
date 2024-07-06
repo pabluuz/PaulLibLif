@@ -1,6 +1,6 @@
 import datetime
 from models.lib_data import PaulLibData
-from commands.base_command import BaseCommand
+from cqrs.commands.base_command import BaseCommand
 
 
 class SaveTodayCommand(BaseCommand):

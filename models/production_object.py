@@ -11,6 +11,7 @@ class ProductionObject:
     FuelRequired: bool = False
     FuelBonusQuality: int = 0
     FuelBonusQuantity: int = 0
+    FuelConsumedQuantity: int = 1
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
@@ -22,4 +23,5 @@ class ProductionObject:
             FuelRequired=data.get("FuelRequired", False),
             FuelBonusQuality=data.get("FuelBonusQuality", 0),
             FuelBonusQuantity=data.get("FuelBonusQuantity", 0),
+            FuelConsumedQuantity=data.get("FuelConsumedQuantity", 0),
         )

@@ -1,7 +1,7 @@
 from typing import Optional
 from sqlalchemy.orm import joinedload
 from models.game_data import UnmovableObject, ObjectType
-from queries.base_query import BaseQuery
+from cqrs.queries.base_query import BaseQuery
 
 
 class FetchUnmovableObjectsQuery(BaseQuery):

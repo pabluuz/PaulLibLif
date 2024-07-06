@@ -1,6 +1,6 @@
 from typing import Optional
-from queries.base_query import BaseQuery
-from queries.fetch_unmovable_objects import FetchUnmovableObjectsQuery
+from cqrs.queries.base_query import BaseQuery
+from cqrs.queries.fetch_unmovable_objects import FetchUnmovableObjectsQuery
 
 
 class FetchItemsForUnmovableObjectsQuery(BaseQuery):

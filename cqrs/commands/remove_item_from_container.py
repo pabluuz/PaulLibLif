@@ -1,17 +1,14 @@
-from commands.base_command import BaseCommand
+from cqrs.commands.base_command import BaseCommand
 from models.game_data import Item, Container, MovableObject, ObjectType, UnmovableObject
 
 
-class AddItemToContainerCommand(BaseCommand):
+class RemoveItemFromContainerCommand(BaseCommand):
 
     def run(
         self,
-        container_object_type_name,
-        item_object_type_name,
+        containerId,
+        itemName,
         quantity,
-        durability=0,
-        created_durability=0,
-        feature_id=None,
     ):
         try:
             # Get the object by its object type name
@@ -62,11 +59,13 @@ class AddItemToContainerCommand(BaseCommand):
                     unmovable_object = (
                         self.session.query(UnmovableObject)
                         .filter(UnmovableObject.root_container_id == container.id)
+                        .filter(UnmovableObject.is_complete == 1)
                         .first()
                     )
                     movable_object = (
                         self.session.query(MovableObject)
                         .filter(MovableObject.root_container_id == container.id)
+                        .filter(MovableObject.is_complete == 1)
                         .first()
                     )
 
