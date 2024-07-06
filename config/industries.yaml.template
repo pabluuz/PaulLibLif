@@ -1,5 +1,5 @@
 wh_industry:
-    ObjectTypeName: Warehouse
+    ObjectTypeName: Warehouse InvalidName #this name is invalid, so you want add by misstake items on first run
     ItemToAdd: Honey
     Amount: 5
     MultiplyByQuality: true
@@ -8,7 +8,7 @@ wh_industry:
     FuelBonusQuality: 20
     FuelBonusQuantity: 5
 another_example:
-    ObjectTypeName: Lumber Mill
+    ObjectTypeName: Lumber Mill InvalidName #this name is invalid, so you want add by misstake items on first run
     ItemToAdd: Wooden Plank
     Amount: 5
     MultiplyByQuality: true

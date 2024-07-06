@@ -1,1 +1,2 @@
-DatabaseUri: "mysql+pymysql://root:9303@localhost/lif_1"
+DatabaseUri: "mysql+pymysql://root:xep624@localhost/lif_1"
+DebugIgnoreDayWait: false #only for debugging. don't set it to true, or program will not wait for another day to enable daily_tick

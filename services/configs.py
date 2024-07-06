@@ -1,4 +1,6 @@
 import logging
+import shutil
+import sys
 import yaml
 import os
 from models.production_object import ProductionObject
@@ -16,11 +18,21 @@ class YAMLIndustriesProcessor:
         try:
             with open(self.file_path, "r") as file:
                 self.data = yaml.safe_load(file)
+        except FileNotFoundError:
+            template_file_path = f"{self.file_path}.template"
+            if os.path.exists(template_file_path):
+                self.logger.info(
+                    "Config file not found, creating from template. Find it in config/industries.yaml"
+                )
+                shutil.copy(template_file_path, self.file_path)
+                with open(self.file_path, "r") as file:
+                    self.data = yaml.safe_load(file)
+            else:
+                self.logger.error(f"Neither config file nor template file found: {self.file_path}")
+                self.data = None
+                sys.exit()
         except yaml.YAMLError as e:
             self.logger.error(f"Error reading YAML file: {e}")
-            self.data = None
-        except FileNotFoundError:
-            self.logger.error(f"File not found: {self.file_path}")
             self.data = None
 
     def create_objects(self):
@@ -66,11 +78,22 @@ class ConfigStorage:
         try:
             with open(self.file_path, "r") as file:
                 self.config_data = yaml.safe_load(file)
+        except FileNotFoundError:
+            template_file_path = f"{self.file_path}.template"
+            if os.path.exists(template_file_path):
+                self.logger.info(
+                    "Config file not found, creating from template. Find them in config/lib.yaml, fill them up and retry"
+                )
+                shutil.copy(template_file_path, self.file_path)
+                with open(self.file_path, "r") as file:
+                    self.config_data = yaml.safe_load(file)
+                sys.exit()
+            else:
+                self.logger.error(f"Neither config file nor template file found: {self.file_path}")
+                self.config_data = {}
+                sys.exit()
         except yaml.YAMLError as e:
             self.logger.error(f"Error reading YAML file: {e}")
-            self.config_data = {}
-        except FileNotFoundError:
-            self.logger.error(f"File not found: {self.file_path}")
             self.config_data = {}
 
     def get_config(self):
