@@ -1,16 +1,16 @@
+import os
+import sys
 from typing import Dict
-from commands.add_item_to_container import AddItemToContainerCommand
-from commands.save_today import SaveTodayCommand
 from models.production_object import ProductionObject
-from queries.check_if_next_day import CheckIfNextDayQuery
 from services.configs import YAMLIndustriesProcessor, ConfigStorage
 from services.db_connector import DBConnector
 from services.logging import LoggerSingleton
+import subprocess
 
 
 def main():
     logger = LoggerSingleton.get_logger()
-    logger.info("Starting the application")
+    logger.info(f"Paul Lib LiF v{get_git_version()}")
     # Initialize the database connector
     db_connector = DBConnector()
 
@@ -34,26 +34,57 @@ def main():
 
     lib_config.get_config()
 
-    with CheckIfNextDayQuery() as next_day_query:
-        next_day_query_result = next_day_query.execute()
-        if next_day_query_result:
-            with SaveTodayCommand() as save_today_command:
-                save_today_command.execute()
+    # Check if a command is provided as an argument
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+        console_dir = os.path.join(os.path.dirname(__file__), "console")
+        valid_commands = [
+            f.split(".")[0]
+            for f in os.listdir(console_dir)
+            if f.endswith(".py") and not f.startswith("__")
+        ]
 
-            for industry_name, industry_data in industries.items():
-                object_type_name = industry_data.ObjectTypeName
-                item_to_add = industry_data.ItemToAdd
-                amount = industry_data.Amount
-                with AddItemToContainerCommand() as add_item_command:
-                    add_item_command.run(
-                        container_object_type_name=industry_data.ObjectTypeName,
-                        item_object_type_name=item_to_add,
-                        quantity=industry_data.Amount,
-                    )
-                    # Add additional logic to handle fuel, fuel_required, fuel_bonus_quality, and fuel_bonus_quantity
-                    logger.info(f"Adding {amount} {item_to_add} to {object_type_name}.")
+        if command in valid_commands:
+            module_name = f"console.{command}"
+            try:
+                module = __import__(module_name, fromlist=[""])
+                command_function = getattr(module, command)
+                command_function(industries, logger)
+            except (ImportError, AttributeError) as e:
+                logger.error(f"Error executing command '{command}': {e}")
         else:
-            logger.info("There hasn't been a day since the last check. Skipping.")
+            logger.error(f"Invalid command: {command}")
+    else:
+        logger.error("No command provided. Please provide a command as an argument.")
+
+
+def get_git_version():
+    try:
+        # Get the latest tag, the number of commits since the tag, and the commit hash
+        describe_command = ["git", "describe", "--tags", "--long", "--always"]
+        version = subprocess.check_output(describe_command).strip().decode("utf-8")
+
+        # If there are tags, version looks like: "v1.0.0-14-gabcdef"
+        # If there are no tags, it looks like: "abcdef"
+        if "-" in version:
+            tag, commits_since_tag, commit_hash = version.rsplit("-", 2)
+            version = f"{tag}.{commits_since_tag}"
+        else:
+            # commit_hash = version
+            commit_count = (
+                subprocess.check_output(["git", "rev-list", "--count", "HEAD"])
+                .strip()
+                .decode("utf-8")
+            )
+            version = f"0.0.{commit_count}"
+
+        return version
+    except subprocess.CalledProcessError:
+        return "0.0.0"
+
+
+version = get_git_version()
+print(f"Version: {version}")
 
 
 if __name__ == "__main__":
