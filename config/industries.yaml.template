@@ -1,17 +1,19 @@
-wh_industry:
-    ObjectTypeName: Warehouse InvalidName #this name is invalid, so you want add by misstake items on first run
-    ItemToAdd: Honey
-    Amount: 5
-    MultiplyByQuality: true
-    Fuel: Fertilizer
-    FuelRequired: False
-    FuelBonusQuality: 20
-    FuelBonusQuantity: 5
-another_example:
-    ObjectTypeName: Lumber Mill InvalidName #this name is invalid, so you want add by misstake items on first run
+wh_industry: #This is name just for your convenience. it's never used
+    ObjectTypeName: Warehouse InvalidName #Use english name of container that is producing. this name is invalid, so you want add by misstake items on first run
+    ItemToAdd: Honey #Use english name of item
+    Amount: 5 #Result quantity of added items
+    Fuel: Fertilizer #what kind of fuel is used? Fuel is used to produce item. If you want to add industry without fuel, set it to False
+    FuelRequired: False #Is fuel required or is it optional just to increate quality?
+    FuelBonusQuality: 20 #How much max bonus quality fuel adds (max q100 result) if fuel is present. This takes into account quality of fuel
+    FuelBonusQuantity: 5 #How many bonus quantity of items is added if fuel is present
+another_example: #You can add multiple definitions 👍
+    ObjectTypeName: Lumber Mill InvalidName 
     ItemToAdd: Wooden Plank
     Amount: 5
     MultiplyByQuality: true
     Fuel: Log
     FuelRequired: True
+
+#Don't understand? Nie mówisz po angielsku? Ich spreche kein Englisch? Не говорите по-английски?
+#ChatGPT ctrl+c ctrl+v - "Translate this YAML comments to ✂️Polish✂️German✂️Russian✂️, but preserve keys and values. Explain this to me in my own language"
     

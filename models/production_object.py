@@ -7,7 +7,6 @@ class ProductionObject:
     ObjectTypeName: str = ""
     ItemToAdd: str = ""
     Amount: int = 0
-    MultiplyByQuality: bool = False
     Fuel: str = ""
     FuelRequired: bool = False
     FuelBonusQuality: int = 0
@@ -19,7 +18,6 @@ class ProductionObject:
             ObjectTypeName=data.get("ObjectTypeName", ""),
             ItemToAdd=data.get("ItemToAdd", ""),
             Amount=data.get("Amount", 0),
-            MultiplyByQuality=data.get("MultiplyByQuality", False),
             Fuel=data.get("Fuel", ""),
             FuelRequired=data.get("FuelRequired", False),
             FuelBonusQuality=data.get("FuelBonusQuality", 0),
