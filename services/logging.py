@@ -9,15 +9,15 @@ class LoggerSingleton:
     def get_logger(cls) -> Logger:
         if cls._instance is None:
             cls._instance = logging.getLogger("app_logger")
-            cls._instance.setLevel(logging.DEBUG)
+            cls._instance.setLevel(logging.INFO)
 
             # Create handlers
             file_handler = logging.FileHandler("app.log")
             console_handler = logging.StreamHandler()
 
             # Set the log level for handlers
-            file_handler.setLevel(logging.DEBUG)
-            console_handler.setLevel(logging.DEBUG)
+            file_handler.setLevel(logging.INFO)
+            console_handler.setLevel(logging.INFO)
 
             # Create formatters and add them to the handlers
             formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
