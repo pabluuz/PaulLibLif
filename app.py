@@ -2,7 +2,7 @@ import os
 import sys
 from typing import Dict
 from models.production_object import ProductionObject
-from services.configs import YAMLIndustriesProcessor, ConfigStorage
+from services.configs import ConfigChecker, YAMLIndustriesProcessor, ConfigStorage
 from services.db_connector import DBConnector
 from services.logging import LoggerSingleton
 import subprocess
@@ -11,10 +11,16 @@ import subprocess
 def main():
     logger = LoggerSingleton.get_logger()
     logger.info(f"Paul Lib LiF v{get_git_version()}")
-    # Initialize the database connector
-    db_connector = DBConnector()
+
+    # Create configs if required
+    config_checker = ConfigChecker()
+    if config_checker.checkConfigs(["lib.yaml"]) is False:
+        sys.exit()
 
     # Create all tables
+    db_connector = DBConnector()
+    if db_connector.check_if_can_connect() is False:
+        sys.exit()
     db_connector.create_all_tables()
 
     processor = YAMLIndustriesProcessor()

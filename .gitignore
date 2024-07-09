@@ -2,6 +2,5 @@ venv
 .vscode
 **/__pycache__/
 __pycache__
-config/lib.yaml
-config/industries.yaml
+config/
 app.log

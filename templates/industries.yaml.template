@@ -14,7 +14,4 @@ another_example: #You can add multiple definitions 👍
     MultiplyByQuality: true
     Fuel: Log
     FuelRequired: True
-
-#Don't understand? Nie mówisz po angielsku? Ich spreche kein Englisch? Не говорите по-английски?
-#ChatGPT ctrl+c ctrl+v - "Translate this YAML comments to ✂️Polish✂️German✂️Russian✂️, but preserve keys and values. Explain this to me in my own language"
     
