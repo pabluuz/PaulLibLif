@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
 
@@ -7,7 +7,7 @@ class ProductionObject:
     ObjectTypeName: str = ""
     ItemToAdd: str = ""
     Amount: int = 0
-    Fuel: str = ""
+    Fuel: Optional[str] = None
     FuelRequired: bool = False
     FuelBonusQuality: int = 0
     FuelBonusQuantity: int = 0

@@ -40,6 +40,7 @@ def daily_tick() -> None:
                 logger.info("Saved today's date, so we won't repeat this tick today.")
 
             for industry_name, industry_data in industries.items():
+                industry_data: ProductionObject
                 with AddItemToContainerCommand() as add_item_command:
                     logger.info(
                         f"Adding {industry_data.Amount} {industry_data.ItemToAdd} to every {industry_data.ObjectTypeName} defined in {industry_name}."
@@ -57,6 +58,8 @@ def daily_tick() -> None:
                                         object_type_id=fuel_object_type.id,
                                     )
                                 if fuel_items:
+                                    enough_fuel = True
+                                    result_quality = container.o
                                     total_fuel_quantity = sum(item.quantity for item in fuel_items)
                                     if total_fuel_quantity >= industry_data.FuelConsumedQuantity:
                                         with RemoveItemFromContainerCommand() as remove_fuel_from_container:
@@ -74,14 +77,26 @@ def daily_tick() -> None:
                                                 # Use the average quality for further calculations or logging
                                                 pass
                                     else:
-                                        logger.warning(
+                                        logger.info(
                                             f"Not enough fuel in container {container.id}. Required: {industry_data.FuelConsumedQuantity}, Available: {total_fuel_quantity}"
                                         )
-                            add_item_command.run(
-                                container=container,
-                                item_object_type_name=industry_data.ItemToAdd,
-                                quantity=industry_data.Amount,
-                            )
+                                        enough_fuel = False
+
+                                    if (industry_data.FuelRequired is False) or enough_fuel:
+                                        add_item_command.run(
+                                            container=container,
+                                            item_object_type_name=industry_data.ItemToAdd,
+                                            quantity=industry_data.Amount,
+                                        )
+                            else:
+                                # logger.info(
+                                #     f"No fuel specified for {industry_name}. Adding {industry_data.Amount} {industry_data.ItemToAdd} to {container.object_type.name} ({container.id})."
+                                # )
+                                add_item_command.run(
+                                    container=container,
+                                    item_object_type_name=industry_data.ItemToAdd,
+                                    quantity=industry_data.Amount,
+                                )
                     # Add additional logic to handle fuel, fuel_required, fuel_bonus_quality, and fuel_bonus_quantity
         else:
             logger.info("There hasn't been a day since the last check. Skipping.")

@@ -1,9 +1,12 @@
 ![Logo](readme_logo.png?raw=true)
 # PaulLibLif
-PaulLibLif is a framework for Life is Feudal mods. It allows you to:
+PaulLibLif is a framework for Life is Feudal mods. What it does:
     - Easily create a new items and don't worry about ID's, transfering to clients and all the hussle.
     - Edit all datablocks (weapons, monsters, etc) and automatically transfer them to clients.
-This library adds ORM to life is feudal database, and allows you to define daily actions using YAML. See config/industries.yaml.example for an example.
+    - Create daily actions (e.g. warehouse produces onion every day). See config/industries.yaml.example for an example.
+    - Adds ORM to life is feudal database, enriches those models by missing back-references (e.g. get object from container using root_container_id from either MovableObject or UnmovableObject)
+
+PaulLibLif is modular, so you can use only the parts you need. Refer to step 6 of setup.
 
 This is very early testing, so expect a lot of bugs
 
@@ -36,7 +39,7 @@ What you need:
     cd paul-lib-lif
     ```
 
-2. **Activate a virtual environment and create dirs**: 
+2. **Activate a virtual environment and create dirs**:
 
     **Using `venv`**:
 
@@ -73,7 +76,17 @@ What you need:
 
 6. **Run the application**:
 
-    ### Run server
+    You can run all the parts of PaulLibLif separately. Just choose what you want to run, and follow the instructions below.
+
+    ### Compile mods and run server
+
+    #### Linux
+    ```bash
+    source venv/bin/activate
+    python app.py run_server
+    ```
+
+    #### Windows
     ```bash
     call venv/bin/activate
     python app.py run_server
@@ -82,8 +95,12 @@ What you need:
     ### Daily tick
     Daily tick is done every day at 12:00 AM. Program prevents running it more than once a day.
 
+    Take a look at example industries in templates/industries.yaml.example.
+    Place ready industries in life is feudal server/PaulIndustries/some_choosen_name.yaml.
+    PaulIndustries can contain multiple industries in one file and/or multiple files, it's up to you.
+
     #### Linux
-    Setup a cronjob to run daily. 
+    Setup a cronjob to run daily.
     ```bash
     chmod +x /home/yourusername/steamapps/LifeIsFeudalServer/PaulLibLif/run_daily_tick.sh
     (crontab -l 2>/dev/null; echo "*/10 * * * * /home/yourusername/steamapps/LifeIsFeudalServer/PaulLibLif/run_daily_tick.sh") | crontab -
