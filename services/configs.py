@@ -28,13 +28,10 @@ class ConfigChecker:
             file_path = os.path.join(os.path.dirname(__file__), "..", "config", config)
 
             if not os.path.exists(file_path):
-                template_file_path = os.path.join(
-                    os.path.dirname(__file__), "..", "templates", config + ".template"
-                )
+                template_file_path = os.path.join(os.path.dirname(__file__), "..", "templates", config + ".template")
                 if os.path.exists(template_file_path):
                     self.logger.info(
-                        config
-                        + " config file not found, creating from template. Find it in config subdirectory"
+                        config + " config file not found, creating from template. Find it in config subdirectory"
                     )
                     shutil.copy(template_file_path, file_path)
                     status = False
@@ -50,13 +47,12 @@ class YAMLIndustriesProcessor:
     The `YAMLIndustriesProcessor` class is responsible for loading and processing YAML files located in the `PaulIndustries` directory. It ensures the base directory exists, loads all YAML files in the directory, and creates `ProductionObject` instances from the loaded data.
 
     The class provides the following methods:
-    - `load_yaml(file_path)`: Loads a single YAML file and updates the `data` dictionary.
     - `get_objects()`: Returns the dictionary of `ProductionObject` instances.
     - `display_objects()`: Prints the data for each `ProductionObject` instance (for debugging purposes).
     """
 
     def __init__(self):
-        self.base_dir = os.path.join(os.path.dirname(__file__), "..", "PaulIndustries")
+        self.base_dir = os.path.join(os.path.dirname(__file__), "..", "..", "PaulIndustries")
         self.data = {}
         self.objects = {}
         self.logger = LoggerSingleton.get_logger()
@@ -74,22 +70,21 @@ class YAMLIndustriesProcessor:
             for file in files:
                 if file.endswith(".yaml"):
                     file_path = os.path.join(root, file)
-                    self.load_yaml(file_path)
+                    self.__load_yaml(file_path)
 
-    def load_yaml(self, file_path):
+    def __load_yaml(self, file_path):
         try:
             with open(file_path, "r") as file:
                 data = yaml.safe_load(file)
                 self.data.update(data)
         except yaml.YAMLError as e:
             self.logger.error(f"Error reading YAML file {file_path}: {e}")
+            sys.exit()
 
     def __create_objects(self):
         for name, attributes in self.data.items():
             if not isinstance(attributes, dict):
-                self.logger.warning(
-                    f"Warning: Skipping invalid entry '{name}' with non-dict attributes"
-                )
+                self.logger.warning(f"Warning: Skipping invalid entry '{name}' with non-dict attributes")
                 continue
             self.objects[name] = ProductionObject.from_dict(attributes)
 
@@ -111,9 +106,7 @@ class ConfigStorage:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ConfigStorage, cls).__new__(cls)
-            cls._instance.file_path = os.path.join(
-                os.path.dirname(__file__), "..", "config", "lib.yaml"
-            )
+            cls._instance.file_path = os.path.join(os.path.dirname(__file__), "..", "config", "lib.yaml")
             cls._instance.config_data = {}
             cls._instance.logger = LoggerSingleton.get_logger()
             cls._instance.load_yaml()
@@ -131,6 +124,7 @@ class ConfigStorage:
         except yaml.YAMLError as e:
             self.logger.error(f"Error reading YAML file: {e}")
             self.config_data = {}
+            sys.exit()
 
     def get_config(self):
         return self.config_data
