@@ -15,15 +15,9 @@ class AddItemToContainerCommand(BaseCommand):
     ):
         try:
             # Get the object by its object type name
-            object_type = (
-                self.session.query(ObjectType)
-                .filter(ObjectType.name == item_object_type_name)
-                .first()
-            )
+            object_type = self.session.query(ObjectType).filter(ObjectType.name == item_object_type_name).first()
             if not object_type:
-                self.logger.warning(
-                    f"Item with object type name '{item_object_type_name}' not found."
-                )
+                self.logger.warning(f"Item with object type name '{item_object_type_name}' not found.")
                 return
 
             # Get the item's unit weight
@@ -37,12 +31,8 @@ class AddItemToContainerCommand(BaseCommand):
             max_cont_size = container_object_type.max_cont_size
 
             # Calculate the total weight of the existing items in the container
-            existing_items = (
-                self.session.query(Item).filter(Item.container_id == container.id).all()
-            )
-            total_existing_weight = sum(
-                item.object_type.unit_weight * item.quantity for item in existing_items
-            )
+            existing_items = self.session.query(Item).filter(Item.container_id == container.id).all()
+            total_existing_weight = sum(item.object_type.unit_weight * item.quantity for item in existing_items)
 
             # Calculate the total weight after adding the new items
             total_weight = total_existing_weight + total_weight_to_add
@@ -65,14 +55,9 @@ class AddItemToContainerCommand(BaseCommand):
 
                 # Calculate the quality based on durability
                 if unmovable_object:
-                    quality = int(
-                        (unmovable_object.durability / unmovable_object.object_type.max_cont_size)
-                        * 100
-                    )
+                    quality = int((unmovable_object.durability / 20000) * 100)
                 elif movable_object:
-                    quality = int(
-                        (movable_object.durability / movable_object.object_type.max_cont_size) * 100
-                    )
+                    quality = int((movable_object.durability / 20000) * 100)
                 else:
                     if container.object_type.name == "Monument":
                         self.logger.debug(
@@ -97,7 +82,7 @@ class AddItemToContainerCommand(BaseCommand):
                 self.session.add(new_item)
 
                 self.logger.info(
-                    f"Item(s) added to container with object type name '{container.object_type.name}' and ID '{container.id}'"
+                    f"{object_type.name} x {quantity} (q{quality}) added to container with object type name '{container.object_type.name}' and ID '{container.id}'"
                 )
             else:
                 self.logger.warning(

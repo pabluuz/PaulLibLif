@@ -1,11 +1,11 @@
-wh_industry: #This is name just for your convenience. it's never used
+wh_industry: #This is name just for your convenience. it's never used in game, it's just displayed in logs.
     ObjectTypeName: Warehouse InvalidName #Use english name of container that is producing. this name is invalid, so you want add by misstake items on first run
     ItemToAdd: Honey #Use english name of item
     Amount: 5 #Result quantity of added items
-    Fuel:
-    FuelRequired: True #Is fuel required or is it optional just to increate quality?
-    FuelBonusQuality: 20 #How much max bonus quality fuel adds (max q100 result) if fuel is present. This takes into account quality of fuel
-    FuelBonusQuantity: 5 #How many bonus quantity of items is added if fuel is present
+    Fuel: Wooden Plank #what kind of fuel is used? Fuel is used to produce item. If you want to add industry working without fuel, set it to "False"
+    FuelRequired: True #Is fuel required or is it optional just to increase quality?
+    FuelBonusQuality: 20 #How much max bonus quality fuel adds (max q100 result) if fuel is present. This takes into account quality of fuel. (0 for no bonus)
+    FuelBonusQuantity: 5 #How many bonus quantity of items is added if fuel is present. (0 for no bonus)
     FuelConsumedQuantity: 1 #How much fuel is consumed per day
 another_example: #You can add multiple definitions 👍
     ObjectTypeName: Lumber Mill InvalidName

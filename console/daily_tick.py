@@ -2,6 +2,7 @@
 import sys
 from typing import Dict
 from cqrs.commands.add_item_to_container import AddItemToContainerCommand
+from cqrs.commands.remove_item_from_container import RemoveItemFromContainerCommand
 from cqrs.commands.save_today import SaveTodayCommand
 from cqrs.queries.fetch_items_by_object_type_and_container import FetchItemsByObjectTypeAndContainerQuery
 from cqrs.queries.fetch_object_type_by_name import FetchObjectTypeByNameQuery
@@ -38,10 +39,6 @@ def daily_tick() -> None:
                 save_today_command.execute()
                 logger.info("Saved today's date, so we won't repeat this tick today.")
 
-            # Check if container has fuel item
-
-            # Remove fuel item
-
             for industry_name, industry_data in industries.items():
                 with AddItemToContainerCommand() as add_item_command:
                     logger.info(
@@ -61,16 +58,24 @@ def daily_tick() -> None:
                                     )
                                 if fuel_items:
                                     total_fuel_quantity = sum(item.quantity for item in fuel_items)
-                                    if total_fuel_quantity >= industry_data.FuelRequired:
-                                        avg_quality = remove_fuel_from_container(
-                                            container, fuel_object_type.name, industry_data.FuelRequired, fuel_items
-                                        )
-                                        if avg_quality is not None:
-                                            # Use the average quality for further calculations or logging
-                                            pass
+                                    if total_fuel_quantity >= industry_data.FuelConsumedQuantity:
+                                        with RemoveItemFromContainerCommand() as remove_fuel_from_container:
+                                            logger.info(
+                                                f"Removing {industry_data.FuelConsumedQuantity} {industry_data.Fuel} from {container.object_type.name} ({container.id}). {industry_data.Fuel} left: {total_fuel_quantity - industry_data.FuelConsumedQuantity} eta {(total_fuel_quantity - industry_data.FuelConsumedQuantity) / industry_data.FuelConsumedQuantity} days."
+                                            )
+                                            avg_quality = remove_fuel_from_container.run(
+                                                container,
+                                                fuel_object_type.name,
+                                                industry_data.FuelConsumedQuantity,
+                                                fuel_items,
+                                            )
+                                            if avg_quality is not None:
+                                                bonus_quality = avg_quality * industry_data.FuelBonusQuality
+                                                # Use the average quality for further calculations or logging
+                                                pass
                                     else:
                                         logger.warning(
-                                            f"Not enough fuel in container {container.id}. Required: {industry_data.FuelRequired}, Available: {total_fuel_quantity}"
+                                            f"Not enough fuel in container {container.id}. Required: {industry_data.FuelConsumedQuantity}, Available: {total_fuel_quantity}"
                                         )
                             add_item_command.run(
                                 container=container,
