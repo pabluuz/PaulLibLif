@@ -3,7 +3,7 @@ from logging import Logger
 
 
 class LoggerSingleton:
-    _instance: Logger = None
+    _instance: Logger = None  # type: ignore
 
     @classmethod
     def get_logger(cls) -> Logger:

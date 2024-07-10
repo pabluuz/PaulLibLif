@@ -3,6 +3,7 @@ PaulLib
 """
 
 from __future__ import annotations
+from typing import Union
 from sqlalchemy import (
     BigInteger,
     Column,
@@ -18,8 +19,10 @@ from sqlalchemy import (
     LargeBinary,
     null,
 )
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy.orm import relationship, Mapped, aliased
 from models.base import Base
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.sql import exists, or_
 
 
 class ObjectType(Base):
@@ -35,9 +38,7 @@ class ObjectType(Base):
     is_device = Column("IsDevice", Boolean, nullable=False, default=False)
     is_door = Column("IsDoor", Boolean, nullable=False, default=False)
     is_premium = Column("IsPremium", Boolean, nullable=False, default=False)
-    max_cont_size = Column(
-        "MaxContSize", Integer, nullable=True, comment="3 digits after point (gramm)"
-    )
+    max_cont_size = Column("MaxContSize", Integer, nullable=True, comment="3 digits after point (gramm)")
     length = Column("Length", SmallInteger, nullable=True)
     max_stack_size = Column(
         "MaxStackSize",
@@ -88,6 +89,18 @@ class Container(Base):
     parent = relationship("Container", remote_side=[id], backref="children")
     object_type: Mapped["ObjectType"] = relationship("ObjectType")
     feature = relationship("Feature")
+
+    _movable_object = relationship("MovableObject", back_populates="root_container", uselist=False)
+    _unmovable_object = relationship("UnmovableObject", back_populates="root_container", uselist=False)
+
+    @hybrid_property
+    def unmovable_or_movable_object(self) -> Union[MovableObject, UnmovableObject]:
+        if self._movable_object:
+            return self._movable_object
+        elif self._unmovable_object:
+            return self._unmovable_object
+        else:
+            raise ValueError("Container must have either a MovableObject or an UnmovableObject")
 
 
 class CustomText(Base):
@@ -164,9 +177,7 @@ class UnmovableObject(Base):
 
     id = Column("ID", Integer, primary_key=True, autoincrement=True)
     object_type_id = Column("ObjectTypeID", Integer, ForeignKey("objects_types.ID"), nullable=False)
-    root_container_id = Column(
-        "RootContainerID", Integer, ForeignKey("containers.ID"), nullable=True
-    )
+    root_container_id = Column("RootContainerID", Integer, ForeignKey("containers.ID"), nullable=True)
     durability = Column(
         "Durability",
         SmallInteger,
@@ -193,15 +204,17 @@ class UnmovableObject(Base):
     owner = relationship("Character", foreign_keys=[owner_id])
     custom_name = relationship("CustomText", foreign_keys=[custom_name_id])
 
+    @hybrid_property
+    def quality(self):
+        return (self.durability / 20000) * 100
+
 
 class MovableObject(Base):
     __tablename__ = "movable_objects"
 
     id = Column("ID", Integer, primary_key=True, autoincrement=True)
     object_type_id = Column("ObjectTypeID", Integer, ForeignKey("objects_types.ID"), nullable=False)
-    root_container_id = Column(
-        "RootContainerID", Integer, ForeignKey("containers.ID"), nullable=True
-    )
+    root_container_id = Column("RootContainerID", Integer, ForeignKey("containers.ID"), nullable=True)
     durability = Column(
         "Durability",
         SmallInteger,
@@ -230,6 +243,10 @@ class MovableObject(Base):
     root_container = relationship("Container", foreign_keys=[root_container_id])
     owner = relationship("Character", foreign_keys=[owner_id])
     custom_name = relationship("CustomText", foreign_keys=[custom_name_id])
+
+    @hybrid_property
+    def quality(self):
+        return (self.durability / 20000) * 100
 
 
 class Character(Base):
@@ -313,9 +330,7 @@ class Horse(Base):
     offset_y = Column("OffsetY", SmallInteger, nullable=False)
     offset_z = Column("OffsetZ", Integer, nullable=False)
     turn_angle = Column("TurnAngle", SmallInteger, nullable=False)
-    mounted_character_id = Column(
-        "MountedCharacterID", Integer, ForeignKey("characters.ID"), nullable=True
-    )
+    mounted_character_id = Column("MountedCharacterID", Integer, ForeignKey("characters.ID"), nullable=True)
     owner_id = Column("OwnerID", Integer, ForeignKey("characters.ID"), nullable=True)
     dropped_time = Column("DroppedTime", TIMESTAMP, nullable=False, default="0000-00-00 00:00:00")
     durability = Column("Durability", SmallInteger, nullable=False, default=100)
