@@ -76,20 +76,31 @@ class YAMLIndustriesProcessor:
         try:
             with open(file_path, "r") as file:
                 data = yaml.safe_load(file)
-                self.data.update(data)
+                if not data:
+                    return
+
+                for name, attributes in data.items():
+                    if name in self.data:
+                        self.logger.error(
+                            f"An industry with the name '{name}' already exists. Redeclared in file {file_path}"
+                        )
+                        sys.exit(1)
+
+                    self.data[name] = attributes
+
         except yaml.YAMLError as e:
             self.logger.error(f"Error reading YAML file {file_path}: {e}")
-            sys.exit()
+            sys.exit(1)
 
     def __create_objects(self):
         for name, attributes in self.data.items():
             if not isinstance(attributes, dict):
-                self.logger.warning(f"Warning: Skipping invalid entry '{name}' with non-dict attributes")
-                continue
+                self.logger.error(f"Error: An industry with the name '{name}' with non-dict attributes")
+                sys.exit(1)
             self.objects[name] = ProductionObject.from_dict(attributes)
 
     def get_objects(self):
-        return self.objects
+        return dict(sorted(self.objects.items()))
 
     def display_objects(self):
         """

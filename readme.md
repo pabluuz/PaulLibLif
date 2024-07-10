@@ -20,10 +20,17 @@ Tip: Try to keep names of objects unique in scope of your mod. This will make it
     - config/
     - objects.yaml
     - recipes.yaml
-    - industries.yaml
     - readme.md
 
 Remember that mods don't have to contain all files. You mod for example can contain only objects.yaml, if you wish to add object without recipes, or you can add only industries.yaml if you wish to add daily actions.
+
+## What's PaulIndustry ?
+PaulIndustry is a simple file containing what certain buildings produces every day. You can for example define that all bark boxes produce piece of bark every day. Think about sawmills that create planks from building logs, or big tanning tubes tanning bulk of leathers every day. Possibilities are endless.
+
+### Structure of PaulIndustry
+PaulIndustry can contain one or more yaml definition of industries. You put them in ../PaulIndustries/NameOfMod/ (PaulIndustries directory one directory up from there). You can name those files whatever you want. For best results try to create dedicated directory for package of you industries and provide readme.md if you're planning to share it.
+
+Find an example in templates/industries.yaml.example.
 
 ## Setup
 It should be fairly easy to setup PaulLibLif. If you have any problems, please open an issue.
