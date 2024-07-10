@@ -9,6 +9,7 @@ class AddItemToContainerCommand(BaseCommand):
         container: Container,
         item_object_type_name,
         quantity,
+        quality,
         durability=0,
         created_durability=0,
         feature_id=None,
@@ -52,22 +53,6 @@ class AddItemToContainerCommand(BaseCommand):
                     .filter(MovableObject.is_complete == 1)
                     .first()
                 )
-
-                # Calculate the quality based on durability
-                if unmovable_object:
-                    quality = int((unmovable_object.durability / 20000) * 100)
-                elif movable_object:
-                    quality = int((movable_object.durability / 20000) * 100)
-                else:
-                    if container.object_type.name == "Monument":
-                        self.logger.debug(
-                            f"Container with ID = '{container.id}' not found in neither unmovable object nor movable object. It's normal, because monuments get orphaned container row when they expire. Ignore it."
-                        )
-                    else:
-                        self.logger.warning(
-                            f"Container with ID = '{container.id}' not found in neither unmovable object nor movable object. Is it orphaned? Check the database."
-                        )
-                    return
 
                 new_item = Item(
                     container_id=container.id,

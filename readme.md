@@ -4,11 +4,11 @@ PaulLibLif is a framework for Life is Feudal mods. What it does:
     - Easily create a new items and don't worry about ID's, transfering to clients and all the hussle.
     - Edit all datablocks (weapons, monsters, etc) and automatically transfer them to clients.
     - Create daily actions (e.g. warehouse produces onion every day). See config/industries.yaml.example for an example.
-    - Adds ORM to life is feudal database, enriches those models by missing back-references (e.g. get object from container using root_container_id from either MovableObject or UnmovableObject)
+    - Adds ORM to life is feudal database, enriches those models by adding missing back-references (e.g. get object from container using root_container_id from either MovableObject or UnmovableObject)
 
 PaulLibLif is modular, so you can use only the parts you need. Refer to step 6 of setup.
 
-This is very early testing, so expect a lot of bugs
+This is very early testing, so expect a lot of bugs. Not recommended for production use right now.
 
 ## What's PaulMod ?
 PaulMod is simplified, human readable package containing mod. PaulLibLif takes away all the hussle of managing mods (unique ID's, transfering to clients, etc), and brings up a simple and easy way to create mods.
@@ -93,7 +93,7 @@ What you need:
     ```
 
     ### Daily tick
-    Daily tick is done every day at 12:00 AM. Program prevents running it more than once a day.
+    Daily tick is done every day at 12:00 AM. Program prevents running it more than once a day. (configured in config/lib.yaml)
 
     Take a look at example industries in templates/industries.yaml.example.
     Place ready industries in life is feudal server/PaulIndustries/some_choosen_name.yaml.

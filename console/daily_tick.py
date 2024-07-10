@@ -12,6 +12,7 @@ from cqrs.queries.fetch_containers_by_object_type_name import FetchContainersByO
 from services.configs import ConfigStorage, YAMLIndustriesProcessor
 from services.industry_validator import IndustryValidator
 from services.logging import LoggerSingleton
+import math
 
 
 def daily_tick() -> None:
@@ -42,9 +43,14 @@ def daily_tick() -> None:
             for industry_name, industry_data in industries.items():
                 industry_data: ProductionObject
                 with AddItemToContainerCommand() as add_item_command:
-                    logger.info(
-                        f"Adding {industry_data.Amount} {industry_data.ItemToAdd} to every {industry_data.ObjectTypeName} defined in {industry_name}."
-                    )
+                    if industry_data.FuelRequired:
+                        logger.info(
+                            f"Adding {industry_data.Amount} {industry_data.ItemToAdd} to every {industry_data.ObjectTypeName} containing fuel ({industry_data.FuelConsumedQuantity} x {industry_data.Fuel}) defined in {industry_name}."
+                        )
+                    else:
+                        logger.info(
+                            f"Adding {industry_data.Amount} {industry_data.ItemToAdd} to every {industry_data.ObjectTypeName} defined in {industry_name}."
+                        )
                     with FetchContainersByObjectTypeNameQuery() as fetch_containers_query:
                         fetch_containers_result = fetch_containers_query.execute(industry_data.ObjectTypeName)
                         for container in fetch_containers_result:
@@ -59,13 +65,13 @@ def daily_tick() -> None:
                                     )
                                 if fuel_items:
                                     enough_fuel = True
-                                    result_quality = container.o
+                                    result_quality = container.unmovable_or_movable_object.quality
                                     total_fuel_quantity = sum(item.quantity for item in fuel_items)
                                     if total_fuel_quantity >= industry_data.FuelConsumedQuantity:
                                         with RemoveItemFromContainerCommand() as remove_fuel_from_container:
-                                            logger.info(
-                                                f"Removing {industry_data.FuelConsumedQuantity} {industry_data.Fuel} from {container.object_type.name} ({container.id}). {industry_data.Fuel} left: {total_fuel_quantity - industry_data.FuelConsumedQuantity} eta {(total_fuel_quantity - industry_data.FuelConsumedQuantity) / industry_data.FuelConsumedQuantity} days."
-                                            )
+                                            # logger.info(
+                                            #     f"Removing {industry_data.FuelConsumedQuantity} {industry_data.Fuel} from {container.object_type.name} ({container.id}). {industry_data.Fuel} left: {total_fuel_quantity - industry_data.FuelConsumedQuantity} eta {(total_fuel_quantity - industry_data.FuelConsumedQuantity) / industry_data.FuelConsumedQuantity} days."
+                                            # )
                                             avg_quality = remove_fuel_from_container.run(
                                                 container,
                                                 fuel_object_type.name,
@@ -73,30 +79,40 @@ def daily_tick() -> None:
                                                 fuel_items,
                                             )
                                             if avg_quality is not None:
-                                                bonus_quality = avg_quality * industry_data.FuelBonusQuality
-                                                # Use the average quality for further calculations or logging
-                                                pass
+                                                result_quality = result_quality + (
+                                                    avg_quality * industry_data.FuelBonusQuality
+                                                )
+                                                if result_quality > 100:
+                                                    result_quality = 100
                                     else:
+                                        enough_fuel = False
+                                    if enough_fuel is True:
+                                        logger.info(
+                                            f"Removing {industry_data.FuelConsumedQuantity} {industry_data.Fuel} from {container.object_type.name} ({container.id}). {industry_data.Fuel} left: {total_fuel_quantity - industry_data.FuelConsumedQuantity} eta {math.floor((total_fuel_quantity - industry_data.FuelConsumedQuantity) / industry_data.FuelConsumedQuantity)} days."
+                                        )
+                                        add_item_command.run(
+                                            container=container,
+                                            item_object_type_name=industry_data.ItemToAdd,
+                                            quantity=industry_data.Amount + industry_data.FuelBonusQuantity,
+                                            quality=result_quality,
+                                        )
+                                    elif industry_data.FuelRequired is False and enough_fuel is False:
                                         logger.info(
                                             f"Not enough fuel in container {container.id}. Required: {industry_data.FuelConsumedQuantity}, Available: {total_fuel_quantity}"
                                         )
-                                        enough_fuel = False
-
-                                    if (industry_data.FuelRequired is False) or enough_fuel:
                                         add_item_command.run(
                                             container=container,
                                             item_object_type_name=industry_data.ItemToAdd,
                                             quantity=industry_data.Amount,
+                                            quality=container.unmovable_or_movable_object.quality,
                                         )
                             else:
-                                # logger.info(
-                                #     f"No fuel specified for {industry_name}. Adding {industry_data.Amount} {industry_data.ItemToAdd} to {container.object_type.name} ({container.id})."
-                                # )
+                                logger.info(f"No fuel specified for {industry_name}.")
                                 add_item_command.run(
                                     container=container,
                                     item_object_type_name=industry_data.ItemToAdd,
                                     quantity=industry_data.Amount,
+                                    quality=container.unmovable_or_movable_object.quality,
                                 )
-                    # Add additional logic to handle fuel, fuel_required, fuel_bonus_quality, and fuel_bonus_quantity
         else:
             logger.info("There hasn't been a day since the last check. Skipping.")

@@ -3,7 +3,7 @@ PaulLib
 """
 
 from __future__ import annotations
-from abc import ABC
+from typing import Union
 from sqlalchemy import (
     BigInteger,
     Column,
@@ -90,24 +90,17 @@ class Container(Base):
     object_type: Mapped["ObjectType"] = relationship("ObjectType")
     feature = relationship("Feature")
 
-    _movable_object = relationship(
-        "MovableObject", foreign_keys="MovableObject.root_container_id", uselist=False, back_populates="root_container"
-    )
-    _unmovable_object = relationship(
-        "UnmovableObject",
-        foreign_keys="UnmovableObject.root_container_id",
-        uselist=False,
-        back_populates="root_container",
-    )
+    _movable_object = relationship("MovableObject", back_populates="root_container", uselist=False)
+    _unmovable_object = relationship("UnmovableObject", back_populates="root_container", uselist=False)
 
     @hybrid_property
-    def object(self):
+    def unmovable_or_movable_object(self) -> Union[MovableObject, UnmovableObject]:
         if self._movable_object:
             return self._movable_object
         elif self._unmovable_object:
             return self._unmovable_object
         else:
-            return None
+            raise ValueError("Container must have either a MovableObject or an UnmovableObject")
 
 
 class CustomText(Base):
@@ -179,14 +172,26 @@ class Item(Base):
     container = relationship("Container")
 
 
-class BaseObject(Base, ABC):
-    __abstract__ = True
+class UnmovableObject(Base):
+    __tablename__ = "unmovable_objects"
 
     id = Column("ID", Integer, primary_key=True, autoincrement=True)
     object_type_id = Column("ObjectTypeID", Integer, ForeignKey("objects_types.ID"), nullable=False)
     root_container_id = Column("RootContainerID", Integer, ForeignKey("containers.ID"), nullable=True)
-    durability = Column("Durability", SmallInteger, nullable=False, default=0)
-    created_durability = Column("CreatedDurability", SmallInteger, nullable=False, default=0)
+    durability = Column(
+        "Durability",
+        SmallInteger,
+        nullable=False,
+        default=0,
+        comment="2 digits after point Less then 10 = object is damaged",
+    )
+    created_durability = Column(
+        "CreatedDurability",
+        SmallInteger,
+        nullable=False,
+        default=0,
+        comment="2 digits after point, also acts as MaxDurability",
+    )
     is_complete = Column("IsComplete", Boolean, nullable=False)
     geo_data_id = Column("GeoDataID", Integer, nullable=False)
     owner_id = Column("OwnerID", Integer, ForeignKey("character.ID"), nullable=True)
@@ -204,26 +209,44 @@ class BaseObject(Base, ABC):
         return (self.durability / 20000) * 100
 
 
-class MovableObject(BaseObject):
+class MovableObject(Base):
     __tablename__ = "movable_objects"
 
-    altitude = Column("Altitude", SmallInteger, nullable=False, comment="Altitude in ingame decimeters")
-    carrier_character_id = Column("CarrierCharacterID", Integer, ForeignKey("character.ID"), unique=True)
-    carrier_horse_id = Column("CarrierHorseID", Integer, ForeignKey("horses.ID"), unique=True)
-    dropped_item_id = Column("DroppedItemID", Integer, ForeignKey("items.ID"), unique=True)
-    carrier_movable_id = Column("CarrierMovableID", Integer, ForeignKey("movable_objects.ID"), unique=True)
+    id = Column("ID", Integer, primary_key=True, autoincrement=True)
+    object_type_id = Column("ObjectTypeID", Integer, ForeignKey("objects_types.ID"), nullable=False)
+    root_container_id = Column("RootContainerID", Integer, ForeignKey("containers.ID"), nullable=True)
+    durability = Column(
+        "Durability",
+        SmallInteger,
+        nullable=False,
+        default=100,
+        comment="Less then 10 - object is damaged",
+    )
+    created_durability = Column(
+        "CreatedDurability",
+        SmallInteger,
+        nullable=False,
+        default=0,
+        comment="2 digits after point, also acts as MaxDurability",
+    )
+    is_complete = Column("IsComplete", Boolean, nullable=False)
+    geo_data_id = Column("GeoDataID", Integer, nullable=False)
+    owner_id = Column("OwnerID", Integer, ForeignKey("character.ID"), nullable=True)
+    custom_name_id = Column("CustomNameID", Integer, ForeignKey("custom_texts.ID"), nullable=True)
+    dropped_time = Column("DroppedTime", TIMESTAMP, nullable=False, default="0000-00-00 00:00:00")
+    turn_angle = Column("TurnAngle", SmallInteger, nullable=False)
     offset_mm_x = Column("OffsetMmX", SmallInteger, nullable=False, comment="ingame millimeters")
     offset_mm_y = Column("OffsetMmY", SmallInteger, nullable=False, comment="ingame millimeters")
     offset_mm_z = Column("OffsetMmZ", Integer, nullable=False, comment="ingame millimeters")
 
-    carrier_character = relationship("Character", foreign_keys=[carrier_character_id])
-    carrier_horse = relationship("Horse", foreign_keys=[carrier_horse_id])
-    dropped_item = relationship("Item", foreign_keys=[dropped_item_id])
-    carrier_movable = relationship("MovableObject", remote_side=[id])
+    object_type = relationship("ObjectType")
+    root_container = relationship("Container", foreign_keys=[root_container_id])
+    owner = relationship("Character", foreign_keys=[owner_id])
+    custom_name = relationship("CustomText", foreign_keys=[custom_name_id])
 
-
-class UnmovableObject(BaseObject):
-    __tablename__ = "unmovable_objects"
+    @hybrid_property
+    def quality(self):
+        return (self.durability / 20000) * 100
 
 
 class Character(Base):
