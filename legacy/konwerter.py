@@ -82,7 +82,7 @@ class LegacyConverter:
 
         self.file_path = "../sql/dump.sql"
 
-    def is_castable_as_int(variable):
+    def is_castable_as_int(self, variable):
         try:
             int(variable)
             return True
