@@ -5,6 +5,7 @@ import sys
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
 import yaml
+from cqrs.queries.recipe import FindRecipeByName
 from legacy.xdziura import find_free_ids
 from cqrs.queries.fetch_object_type_by_name import FetchObjectTypeByNameQuery
 from services.logging import LoggerSingleton
@@ -59,6 +60,35 @@ class YamlToXmlConverter:
         self.logger.error(f"Error: '{name}' does not exist as name of any object.")
         sys.exit(1)
 
+    def _recipe_name_to_id(self, name: string):
+        # look in DB first, maybe it's easy
+        with FindRecipeByName() as find_recipe_query:
+            recipe = find_recipe_query.execute(name)
+            if recipe is not None:
+                return recipe.id
+
+        # now look in yamls, maybe it's not yet added
+        # we will use 0 as ID, and reschedule whole procedure
+        data = []
+        for yaml_file in os.listdir(self.yaml_dir_path):
+            if yaml_file.endswith(".yaml"):
+                yaml_file_path = os.path.join(self.yaml_dir_path, yaml_file)
+                with open(yaml_file_path, "r") as yaml_file:
+                    data.append(yaml.safe_load(yaml_file))
+                for datum in data:
+                    if datum and "objects" in datum:
+                        for obj in datum["objects"]:
+                            if obj["name"] == name:
+                                if "idX" not in obj or obj["idX"] is None:
+                                    obj["idX"] = self.free_ids_obj_types[self.free_ids_index_obj_types]
+                                    self.free_ids_index_obj_types += 1
+                                    self.logger.info(f"Added ID {obj['idX']} to ObjectType '{name}'.")
+                                return obj["idX"]
+
+        # else we'll crash. not found anywhere
+        self.logger.error(f"Error: '{name}' does not exist as name of any object.")
+        sys.exit(1)
+
     def _fill_default_values_to_missing_keys_in_yaml(self, data):
         defaults_false = [
             "isContainer",
@@ -85,6 +115,28 @@ class YamlToXmlConverter:
 
         if "parent" not in data:
             data["parent"] = "Inventory objects"
+
+        # Recipe
+        if "recipes" in data:
+            for data_recipe in data["recipes"]:
+                if "skillLevel" not in data_recipe:
+                    data_recipe["skillLevel"] = 0
+                if "quantity" not in data_recipe:
+                    data_recipe["quantity"] = 1
+                if "autorepeat" not in data_recipe:
+                    data_recipe["autorepeat"] = False
+                if "isBlueprint" not in data_recipe:
+                    data_recipe["isBlueprint"] = False
+                if "imagePath" not in data_recipe:
+                    data_recipe["imagePath"] = ""
+
+                # Recipe requirements
+                if "requirements" in data_recipe:
+                    for data_recipe_req in data_recipe["requirements"]:
+                        if "minimalQuality" not in data_recipe_req:
+                            data_recipe_req["minimalQuality"] = 0
+                        if "isRegionItemRequired" not in data_recipe_req:
+                            data_recipe_req["isRegionItemRequired"] = False
 
         return data
 
@@ -121,6 +173,19 @@ class YamlToXmlConverter:
                 )
 
             f.write(dom_string)
+
+    def _add_recipe(self, obj):
+        if "recipes" not in obj:
+            return
+
+        parser = ET.XMLParser(encoding="utf-8", target=CommentedTreeBuilder())
+        tree = ET.parse("../update/data/recipe_requirement.xml", parser=parser)
+        table = tree.getroot()
+        rows_with_paulmod = table.findall('.//row[@PaulMod="yes"]')
+
+        for datum in obj["recipes"]:
+
+            datum["idX"] = self.next_id
 
     def convert(self):
         # Read the existing XML file

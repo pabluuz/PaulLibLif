@@ -131,3 +131,4 @@ What you need:
 
 ## License:
 Copyleft (ↄ) 2024. Made with ❤️ by Paul. Use it, abuse it, fork it, steal it, whatever. Just keep it open source with copyleft license.
+![Unit tests please](readme_tests.jpg?raw=true)
