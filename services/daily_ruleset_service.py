@@ -6,8 +6,8 @@ from services.logging import LoggerSingleton
 
 
 class DailyRulesetService:
-    SOURCE_PATH = "../paul-daily-rulesets"
-    DESTINATION_PATH = "../update"
+    SOURCE_PATH = "../PaulDailyRulesets"
+    DESTINATION_PATH = ".."
 
     def __init__(self) -> None:
         self.logger = LoggerSingleton.get_logger()
