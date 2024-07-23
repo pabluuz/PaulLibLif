@@ -1,15 +1,21 @@
 wh_industry: #This is name just for your convenience. it's never used in game, it's just displayed in logs.
     ObjectTypeName: Warehouse InvalidName #Use english name of container that is producing. this name is invalid, so you want add by misstake items on first run
-    ItemToAdd: Honey #Use english name of item
+    ResultItemToAdd: Honey #Use english name of item
     Amount: 5 #Result quantity of added items
+    ItemRequired: True #Is item required. Default false.
+    ItemToConsume: Plank #Use english name of item
+    ItemAmountToConsume: 1 #How many items are consumed to produce one item
+    ItemQualityPercentage: 80 #How much percantage of result q is calculated by quality of consumed item. (80 for 80% of item, 20% of building)
     Fuel: Wooden Plank #what kind of fuel is used? Fuel is used to produce item. If you want to add industry working without fuel, delete this line.
     FuelRequired: True #Is fuel required or is it optional just to increase quality? If you want to add industry working without fuel, delete this line.
     FuelBonusQuality: 20 #How much max bonus quality fuel adds (max q100 result) if fuel is present. This takes into account quality of fuel. (0 for no bonus) If you want to add industry working without fuel, delete this line.
     FuelBonusQuantity: 5 #How many bonus quantity of items is added if fuel is present. (0 for no bonus) If you want to add industry working without fuel, delete this line.
     FuelConsumedQuantity: 1 #How much fuel is consumed per day
+    RepeatMax: 10 #How many times can be produced per day? (0 for unlimited)
+    QualityMultiplier: 1 #use 0.5 to get 50% of result quality (calculated before fuel bonuses, maxes to 100q)
 another_example: #You can add multiple definitions 👍
     ObjectTypeName: Lumber Mill InvalidName
-    ItemToAdd: Wooden Plank
+    ResultItemToAdd: Wooden Plank
     Amount: 5
     MultiplyByQuality: true
     Fuel: Log
