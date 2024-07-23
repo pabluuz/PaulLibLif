@@ -1,7 +1,7 @@
 import os
 import shutil
 from datetime import datetime
-import xml.dom.minidom as minidom
+import xml.etree.ElementTree as ET
 import yaml
 import re
 
@@ -79,24 +79,17 @@ class DailyRulesetService:
                             patch = yaml.safe_load(f)
 
                         # Load XML
-                        dom = minidom.parse(xml_path)
+                        tree = ET.parse(xml_path)
+                        root = tree.getroot()
 
                         # Apply patch
-                        self.apply_patch(dom.documentElement, patch)
+                        self.apply_patch(root, patch)
 
                         # Replace newlines with XML entity within <string> elements
-                        self.replace_newlines_in_strings(dom)
+                        self.replace_newlines_in_strings(root)
 
                         # Save patched XML
-                        xml_str = dom.toxml()
-                        # Correctly handle specific entities
-                        xml_str = xml_str.replace("&quot;", '"')
-
-                        # Convert <string id="256"/> to <string id="256"></string>
-                        xml_str = re.sub(r'<string id="(\d+)"\s*/>', r'<string id="\1"></string>', xml_str)
-
-                        with open(xml_path, "w", encoding="utf-8") as f:
-                            f.write(xml_str)
+                        self.save_xml(tree, xml_path)
                         self.logger.info(f"Patched {xml_file} with {yaml_file}")
 
                     except Exception as e:
@@ -109,25 +102,37 @@ class DailyRulesetService:
             if isinstance(value, list):
                 for item in value:
                     if "id" in item and "value" in item:
-                        string_elem = element.getElementsByTagName("string")
-                        for elem in string_elem:
-                            if elem.getAttribute("id") == item["id"]:
-                                elem.firstChild.data = item["value"]
+                        for elem in element.findall("string"):
+                            if elem.get("id") == item["id"]:
+                                elem.text = item["value"]
                                 break
                         else:
-                            new_string = element.ownerDocument.createElement("string")
-                            new_string.setAttribute("id", item["id"])
-                            new_string.appendChild(element.ownerDocument.createTextNode(item["value"]))
-                            element.appendChild(new_string)
+                            new_string = ET.Element("string", id=item["id"])
+                            new_string.text = item["value"]
+                            element.append(new_string)
             elif isinstance(value, dict):
-                sub_elements = element.getElementsByTagName(key)
-                if sub_elements:
-                    self.apply_patch(sub_elements[0], value)
+                sub_element = element.find(key)
+                if sub_element is not None:
+                    self.apply_patch(sub_element, value)
             else:
-                element.setAttribute(key, str(value))
+                element.set(key, str(value))
 
-    def replace_newlines_in_strings(self, dom):
-        string_elements = dom.getElementsByTagName("string")
-        for string_elem in string_elements:
-            if string_elem.firstChild and string_elem.firstChild.nodeType == string_elem.TEXT_NODE:
-                string_elem.firstChild.data = string_elem.firstChild.data.replace("\n", "&#xA;")
+    def replace_newlines_in_strings(self, element):
+        for string_elem in element.findall(".//string"):
+            if string_elem.text:
+                string_elem.text = string_elem.text.replace("\n", "&#xA;")
+
+    def save_xml(self, tree, file_path):
+        xml_str = ET.tostring(tree.getroot(), encoding="unicode", method="xml")
+
+        # Correctly handle specific entities
+        xml_str = xml_str.replace("&quot;", '"')
+
+        # Convert <string id="256"/> to <string id="256"></string>
+        xml_str = re.sub(r'<string id="(\d+)"\s*/>', r'<string id="\1"></string>', xml_str)
+
+        # Preserve &#xA; and &#10;
+        xml_str = xml_str.replace("&amp;#xA;", "&#xA;").replace("&amp;#10;", "&#10;")
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(xml_str)
