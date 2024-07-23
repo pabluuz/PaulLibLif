@@ -7,3 +7,5 @@ def daily_ruleset() -> None:
     logger.info("Copying rules from today weekday to update")
     daily_ruleset_service = DailyRulesetService()
     daily_ruleset_service.process_daily_rulesets()
+    logger.info("Pathing rules")
+    daily_ruleset_service.patch_yaml_to_xml()
